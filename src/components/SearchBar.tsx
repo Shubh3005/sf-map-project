@@ -15,7 +15,7 @@ export interface AutocompleteSuggestion {
 const api_key = import.meta.env.VITE_GEOCODE_API_KEY || '';
 
 interface SearchBarProps {
-  onLocationSelect?: (longitude: number, latitude: number) => void;
+  onLocationSelect?: (longitude: number, latitude: number, cityName?: string) => void;
   className?: string;
 }
 
@@ -118,7 +118,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onLocationSelect, className }) =>
     const [longitude, latitude] = suggestion.geometry.coordinates;
     
     if (onLocationSelect) {
-      onLocationSelect(longitude, latitude);
+      onLocationSelect(longitude, latitude, suggestion.name);
     }
     
     console.log(`Selected location: ${suggestion.name} at [${longitude}, ${latitude}]`);
