@@ -35,7 +35,6 @@ const WestgateDemo: React.FC = () => {
   const [selectedProblemId, setSelectedProblemId] = useState<string | null>(null);
   const [reportItems, setReportItems] = useState<ReportItem[]>([]);
   const [showPopup, setShowPopup] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const [currentCityIndex, setCurrentCityIndex] = useState(0);
 
   // Handle location search
@@ -96,15 +95,9 @@ const WestgateDemo: React.FC = () => {
   ) || [];
 
   return (
-    <div className={`relative h-screen w-screen overflow-hidden ${
-      isDarkMode
-        ? 'bg-gradient-to-b from-gray-800 to-black'
-        : 'bg-gradient-to-b from-gray-100 to-gray-300'
-    }`}>
+    <div className="relative h-screen w-screen overflow-hidden bg-gradient-to-b from-gray-800 to-black">
       {/* Top Header Bar */}
-      <div className={`absolute top-0 left-0 right-0 z-20 backdrop-blur-md border-b ${
-        isDarkMode ? 'bg-black/70 border-gray-700' : 'bg-white/70 border-gray-300'
-      }`}>
+      <div className="absolute top-0 left-0 right-0 z-20 backdrop-blur-md border-b bg-black/70 border-gray-700">
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 rounded-lg p-2">
@@ -113,10 +106,10 @@ const WestgateDemo: React.FC = () => {
               </svg>
             </div>
             <div>
-              <h1 className={`font-bold text-xl ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <h1 className="font-bold text-xl text-white">
                 Westgate
               </h1>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className="text-xs text-gray-400">
                 Civic Intelligence Platform
               </p>
             </div>
@@ -127,32 +120,11 @@ const WestgateDemo: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Dark/Light Mode Toggle */}
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`p-2 rounded-lg transition-colors ${
-                isDarkMode
-                  ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {isDarkMode ? (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
-            </button>
-
             <div className="text-right">
-              <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <div className="text-xs text-gray-400">
                 Items in Report
               </div>
-              <div className={`font-bold text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <div className="font-bold text-lg text-white">
                 {reportItems.length}
               </div>
             </div>
@@ -187,38 +159,43 @@ const WestgateDemo: React.FC = () => {
         />
       </div>
 
-      {/* City Details Panel - Left Side with Scroll */}
+      {/* City Popup - Left Side */}
+      {showPopup && selectedCity && (
+        <div className="absolute left-4 top-24 z-10 w-[420px]">
+          <CityPopup
+            cityName={selectedCity.name}
+            problems={selectedCity.problems}
+            riskLevel={selectedCity.riskLevel}
+            onSeeSolution={handleSeeSolution}
+            onClose={() => setShowPopup(false)}
+          />
+        </div>
+      )}
+
+      {/* City Details Panel - Right Side with Scroll */}
       {selectedCity && (
-        <div className="absolute left-4 top-24 bottom-24 z-10 w-96">
-          <div className={`h-full backdrop-blur-md rounded-lg border overflow-hidden flex flex-col ${
-            isDarkMode ? 'bg-black/50 border-gray-700' : 'bg-white/50 border-gray-300'
-          }`}>
+        <div className="absolute right-4 top-24 bottom-24 z-10 w-96">
+          <div className="h-full backdrop-blur-md rounded-lg border overflow-hidden flex flex-col bg-black/50 border-gray-700">
             {/* Navigation Header */}
-            <div className={`p-4 border-b flex items-center justify-between ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-300'
-            }`}>
+            <div className="p-4 border-b flex items-center justify-between border-gray-700">
               <button
                 onClick={handlePrevCity}
-                className={`p-2 rounded hover:bg-opacity-50 transition-colors ${
-                  isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
-                }`}
+                className="p-2 rounded hover:bg-opacity-50 transition-colors hover:bg-gray-700"
               >
-                <svg className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-gray-900'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <div className="text-center">
-                <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <div className="text-sm text-gray-400">
                   City {currentCityIndex + 1} of {mockCities.length}
                 </div>
               </div>
               <button
                 onClick={handleNextCity}
-                className={`p-2 rounded hover:bg-opacity-50 transition-colors ${
-                  isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
-                }`}
+                className="p-2 rounded hover:bg-opacity-50 transition-colors hover:bg-gray-700"
               >
-                <svg className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-gray-900'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -232,19 +209,6 @@ const WestgateDemo: React.FC = () => {
               />
             </div>
           </div>
-        </div>
-      )}
-
-      {/* City Popup - Right Side */}
-      {showPopup && selectedCity && (
-        <div className="absolute right-4 top-24 z-10 w-[420px]">
-          <CityPopup
-            cityName={selectedCity.name}
-            problems={selectedCity.problems}
-            riskLevel={selectedCity.riskLevel}
-            onSeeSolution={handleSeeSolution}
-            onClose={() => setShowPopup(false)}
-          />
         </div>
       )}
 

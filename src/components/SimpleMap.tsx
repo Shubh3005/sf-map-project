@@ -34,14 +34,14 @@ function DeckGLOverlay(props: DeckGLOverlayProps) {
   return null;
 }
 
-// Default color range for the grid
+// Default color range for the grid - Yellow to Red to Green
 const DEFAULT_COLOR_RANGE: Color[] = [
-  [255, 255, 178, 25],
-  [254, 217, 118, 85],
-  [254, 178, 76, 127],
-  [253, 141, 60, 170],
-  [240, 59, 32, 212],
-  [189, 0, 38, 255]
+  [34, 197, 94, 180],   // Green (low risk)
+  [132, 204, 22, 200],  // Lime green
+  [234, 179, 8, 220],   // Yellow (medium risk)
+  [251, 146, 60, 235],  // Orange
+  [239, 68, 68, 250],   // Red (high risk)
+  [220, 38, 38, 255]    // Dark red
 ];
 
 export interface SimpleMapProps {
@@ -182,10 +182,10 @@ const SimpleMap: React.FC<SimpleMapProps> = (props) => {
           return Math.floor(Math.random() * 3) + 1;
         },
         radius: cellSize * 100, // Convert to meters (cellSize was in pixels, now in meters)
-        elevationScale: 100, // Height multiplier for 3D effect
+        elevationScale: 20, // Much lower height multiplier for subtle 3D effect (was 100)
         extruded: true, // Enable 3D extrusion
         colorRange,
-        elevationRange: [0, 3000], // Height range in meters
+        elevationRange: [0, 500], // Much lower height range in meters (was 3000) - appears 2D when zoomed out, 3D when zoomed in
         coverage: 0.9, // How much of the hexagon to fill
         pickable,
         material: {
