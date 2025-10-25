@@ -46,106 +46,118 @@ const CityDetailsPanel: React.FC<CityDetailsPanelProps> = ({
   };
 
   return (
-    <div className={`bg-black/50 backdrop-blur-md rounded-lg border border-gray-700/50 p-4 text-white ${className}`}>
-      {/* City Header */}
-      <div className="mb-4 pb-4 border-b border-gray-700">
-        <div className="flex items-start justify-between mb-2">
+    <div className={`text-white ${className}`}>
+      {/* City Header - Enhanced */}
+      <div className="mb-6 pb-5 border-b border-slate-700/50">
+        <div className="flex items-start justify-between mb-3">
           <div>
-            <h2 className="text-2xl font-bold text-white">{city.name}</h2>
-            <p className="text-gray-400 text-sm">{city.county} County</p>
+            <h2 className="text-3xl font-bold text-white mb-1 tracking-tight">{city.name}</h2>
+            <p className="text-slate-400 text-sm font-medium flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {city.county} County
+            </p>
           </div>
-          <span className={`px-3 py-1 rounded text-xs font-bold ${getRiskColor(city.riskLevel)}`}>
+          <span className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg ${getRiskColor(city.riskLevel)}`}>
             {city.riskLevel.toUpperCase()}
           </span>
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="mb-4">
-        <h3 className="text-white font-semibold text-sm mb-3 uppercase tracking-wide">
+      {/* Key Metrics - Enhanced */}
+      <div className="mb-6">
+        <h3 className="text-white font-bold text-sm mb-4 uppercase tracking-wide flex items-center gap-2">
+          <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
           Key Metrics
         </h3>
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="text-gray-400 text-xs mb-1">Population</div>
-            <div className="text-white font-bold text-lg">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/30 hover:border-slate-600/50 transition-colors">
+            <div className="text-slate-400 text-xs mb-2 font-medium">Population</div>
+            <div className="text-white font-bold text-xl">
               {formatMetric(city.metrics.population, 'number')}
             </div>
           </div>
-          <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="text-gray-400 text-xs mb-1">Median Income</div>
-            <div className="text-white font-bold text-lg">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/30 hover:border-slate-600/50 transition-colors">
+            <div className="text-slate-400 text-xs mb-2 font-medium">Median Income</div>
+            <div className="text-white font-bold text-xl">
               {formatMetric(city.metrics.medianIncome, 'currency')}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Risk Indicators */}
-      <div className="mb-4">
-        <h3 className="text-white font-semibold text-sm mb-3 uppercase tracking-wide">
+      {/* Risk Indicators - Enhanced */}
+      <div className="mb-6">
+        <h3 className="text-white font-bold text-sm mb-4 uppercase tracking-wide flex items-center gap-2">
+          <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
           Risk Indicators
         </h3>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {/* Crime Rate */}
-          <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-gray-400 text-xs">Crime Rate</span>
-              <span className="text-white font-semibold text-sm">
+          <div className="bg-slate-800/50 rounded-lg p-3.5 border border-slate-700/30">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-slate-300 text-xs font-medium">Crime Rate</span>
+              <span className="text-white font-bold text-sm">
                 {formatMetric(city.metrics.crimeRate, 'percentage')}
               </span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-1.5">
+            <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-red-500 h-1.5 rounded-full"
+                className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-500 shadow-lg shadow-red-500/50"
                 style={{ width: `${Math.min(city.metrics.crimeRate * 100, 100)}%` }}
               />
             </div>
           </div>
 
           {/* Foreclosure Rate */}
-          <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-gray-400 text-xs">Foreclosure Rate</span>
-              <span className="text-white font-semibold text-sm">
+          <div className="bg-slate-800/50 rounded-lg p-3.5 border border-slate-700/30">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-slate-300 text-xs font-medium">Foreclosure Rate</span>
+              <span className="text-white font-bold text-sm">
                 {formatMetric(city.metrics.foreclosureRate, 'percentage')}
               </span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-1.5">
+            <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-yellow-500 h-1.5 rounded-full"
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 h-2 rounded-full transition-all duration-500 shadow-lg shadow-yellow-500/50"
                 style={{ width: `${Math.min(city.metrics.foreclosureRate * 100, 100)}%` }}
               />
             </div>
           </div>
 
           {/* Vacancy Rate */}
-          <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-gray-400 text-xs">Vacancy Rate</span>
-              <span className="text-white font-semibold text-sm">
+          <div className="bg-slate-800/50 rounded-lg p-3.5 border border-slate-700/30">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-slate-300 text-xs font-medium">Vacancy Rate</span>
+              <span className="text-white font-bold text-sm">
                 {formatMetric(city.metrics.vacancyRate, 'percentage')}
               </span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-1.5">
+            <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-orange-500 h-1.5 rounded-full"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-500 shadow-lg shadow-orange-500/50"
                 style={{ width: `${Math.min(city.metrics.vacancyRate * 100, 100)}%` }}
               />
             </div>
           </div>
 
           {/* Unemployment */}
-          <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-gray-400 text-xs">Unemployment</span>
-              <span className="text-white font-semibold text-sm">
+          <div className="bg-slate-800/50 rounded-lg p-3.5 border border-slate-700/30">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-slate-300 text-xs font-medium">Unemployment</span>
+              <span className="text-white font-bold text-sm">
                 {formatMetric(city.metrics.unemploymentRate, 'percentage')}
               </span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-1.5">
+            <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-blue-500 h-1.5 rounded-full"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 shadow-lg shadow-blue-500/50"
                 style={{ width: `${Math.min(city.metrics.unemploymentRate * 100, 100)}%` }}
               />
             </div>
@@ -153,29 +165,31 @@ const CityDetailsPanel: React.FC<CityDetailsPanelProps> = ({
         </div>
       </div>
 
-      {/* Detected Problems */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-white font-semibold text-sm uppercase tracking-wide">
+      {/* Detected Problems - Enhanced */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-white font-bold text-sm uppercase tracking-wide flex items-center gap-2">
+            <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             Detected Problems
           </h3>
-          <span className="text-gray-400 text-xs">
+          <span className="text-slate-400 text-xs font-semibold bg-slate-800/50 px-2.5 py-1 rounded-full">
             {city.problems.length} issue{city.problems.length !== 1 ? 's' : ''}
           </span>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {city.problems.map((problem) => (
             <div
               key={problem.id}
-              className="bg-gray-900/50 rounded-lg p-3 border border-gray-800 hover:border-gray-700 transition-colors"
+              className="bg-slate-800/50 rounded-lg p-3.5 border border-slate-700/30 hover:border-slate-600/50 hover:bg-slate-800/70 transition-all duration-200"
             >
-              <div className="flex items-start gap-2">
+              <div className="flex items-start gap-3">
                 {getSeverityIcon(problem.severity)}
                 <div className="flex-1">
-                  <h4 className="text-white font-semibold text-sm mb-1">
+                  <h4 className="text-white font-semibold text-sm leading-snug">
                     {problem.title}
                   </h4>
-                  
                 </div>
               </div>
             </div>
@@ -183,24 +197,30 @@ const CityDetailsPanel: React.FC<CityDetailsPanelProps> = ({
         </div>
       </div>
 
-      {/* Solutions Available */}
-      <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-          </svg>
-          <span className="text-blue-400 font-semibold text-sm">
+      {/* Solutions Available - Enhanced */}
+      <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-700/40 rounded-xl p-4 shadow-lg">
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="bg-blue-500/20 p-2 rounded-lg">
+            <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <span className="text-blue-300 font-bold text-sm">
             {city.solutions.length} AI-Generated Solution{city.solutions.length !== 1 ? 's' : ''}
           </span>
         </div>
-        <p className="text-gray-400 text-xs mb-3">
+        <p className="text-slate-400 text-xs mb-4 leading-relaxed">
           Policy recommendations available based on successful implementations in similar cities.
         </p>
         {onViewAllProblems && (
           <button
             onClick={onViewAllProblems}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors text-sm"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 text-sm shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2"
           >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
             View Problems & Solutions
           </button>
         )}

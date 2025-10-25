@@ -35,24 +35,24 @@ const CityPopup: React.FC<CityPopupProps> = ({
   };
 
   return (
-    <div className="bg-black/95 backdrop-blur-md rounded-lg shadow-2xl border border-gray-700 p-5 min-w-[320px] max-w-[400px]">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+    <div className="bg-gradient-to-br from-slate-900/98 to-slate-800/98 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700/50 p-6 min-w-[360px] max-w-[440px]">
+      {/* Header - Enhanced */}
+      <div className="flex items-start justify-between mb-5">
         <div className="flex-1">
-          <h3 className="text-white font-bold text-lg mb-1">{cityName}</h3>
-          <div className="flex items-center gap-2">
-            <span className={`px-2 py-0.5 rounded text-xs font-semibold text-white ${getRiskColor(riskLevel)}`}>
+          <h3 className="text-white font-bold text-xl mb-2 tracking-tight">{cityName}</h3>
+          <div className="flex items-center gap-2.5">
+            <span className={`px-3 py-1 rounded-lg text-xs font-bold text-white ${getRiskColor(riskLevel)} shadow-lg`}>
               {riskLevel.toUpperCase()} RISK
             </span>
-            <span className="text-gray-400 text-xs">
-              {problems.length} {problems.length === 1 ? 'Issue' : 'Issues'} Detected
+            <span className="text-slate-400 text-xs font-medium bg-slate-800/50 px-2.5 py-1 rounded-full">
+              {problems.length} {problems.length === 1 ? 'Issue' : 'Issues'}
             </span>
           </div>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors ml-2"
+            className="text-slate-400 hover:text-white transition-colors ml-3 hover:bg-slate-800/50 rounded-lg p-1.5"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -61,45 +61,45 @@ const CityPopup: React.FC<CityPopupProps> = ({
         )}
       </div>
 
-      {/* Problems List */}
-      <div className="space-y-3">
+      {/* Problems List - Enhanced */}
+      <div className="space-y-3.5 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent pr-1">
         {problems.map((problem) => (
           <div
             key={problem.id}
-            className="bg-gray-900/50 rounded-lg p-4 border border-gray-800 hover:border-gray-700 transition-colors"
+            className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/30 hover:border-slate-600/50 hover:bg-slate-800/70 transition-all duration-200"
           >
-            {/* Problem Header */}
-            <div className="flex items-start justify-between mb-2">
+            {/* Problem Header - Enhanced */}
+            <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h4 className="text-white font-semibold text-sm mb-1">
+                <h4 className="text-white font-semibold text-sm mb-2 leading-snug">
                   {problem.title}
                 </h4>
-                <span className={`text-xs px-2 py-0.5 rounded border ${getSeverityColor(problem.severity)}`}>
+                <span className={`text-xs px-2.5 py-1 rounded-lg border font-bold ${getSeverityColor(problem.severity)}`}>
                   {problem.severity.toUpperCase()}
                 </span>
               </div>
             </div>
 
-            {/* Problem Description */}
-            <p className="text-gray-300 text-xs mb-3 leading-relaxed">
+            {/* Problem Description - Enhanced */}
+            <p className="text-slate-300 text-xs mb-3 leading-relaxed">
               {problem.description}
             </p>
 
-            {/* Metric Badge */}
+            {/* Metric Badge - Enhanced */}
             <div className="flex items-center justify-between mb-3">
-              <div className="bg-gray-800/50 px-3 py-1.5 rounded flex items-center gap-2">
-                <span className="text-gray-400 text-xs">{problem.metric}:</span>
-                <span className="text-white font-semibold text-xs">{problem.value}%</span>
-                <span className="text-gray-500 text-xs">
-                  (threshold: {problem.threshold}%)
+              <div className="bg-slate-900/70 px-3 py-2 rounded-lg flex items-center gap-2 border border-slate-700/50">
+                <span className="text-slate-400 text-xs font-medium">{problem.metric}:</span>
+                <span className="text-white font-bold text-xs">{problem.value}%</span>
+                <span className="text-slate-500 text-xs">
+                  (limit: {problem.threshold}%)
                 </span>
               </div>
             </div>
 
-            {/* See Solution Button */}
+            {/* See Solution Button - Enhanced */}
             <button
               onClick={() => onSeeSolution(problem.id)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors text-sm flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-blue-500/30"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -110,10 +110,10 @@ const CityPopup: React.FC<CityPopupProps> = ({
         ))}
       </div>
 
-      {/* Footer */}
-      <div className="mt-4 pt-3 border-t border-gray-800">
-        <p className="text-gray-500 text-xs text-center">
-          Click "See Solution" to view AI-generated policy recommendations
+      {/* Footer - Enhanced */}
+      <div className="mt-5 pt-4 border-t border-slate-700/50">
+        <p className="text-slate-500 text-xs text-center font-medium">
+          Click "See Solution" for AI-generated policy recommendations
         </p>
       </div>
     </div>

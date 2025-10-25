@@ -3,6 +3,7 @@ import { Map, useControl } from 'react-map-gl/maplibre';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { PickingInfo } from '@deck.gl/core';
 import { HexagonLayer } from '@deck.gl/aggregation-layers';
+import { IconLayer } from '@deck.gl/layers';
 import { Layer } from '@deck.gl/core';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -48,7 +49,7 @@ export interface SimpleMapProps {
   // Basic styling
   className?: string;
   style?: React.CSSProperties;
-  
+
   // View state
   viewState?: {
     longitude: number;
@@ -57,7 +58,7 @@ export interface SimpleMapProps {
     pitch?: number;
     bearing?: number;
   };
-  
+
   // Data visualization
   data?: DataPoint[] | APIDataPoint[] | string;
   colorRange?: Color[];
@@ -65,15 +66,22 @@ export interface SimpleMapProps {
   cellSize?: number;
   aggregation?: 'SUM' | 'MEAN' | 'MIN' | 'MAX';
   colorDomain?: [number, number];
-  
+
   // Interactivity
   pickable?: boolean;
   onHover?: (info: PickingInfo) => void;
   onClick?: (info: PickingInfo) => void;
   onViewStateChange?: (params: any) => void;
-  
+
   // Force refresh
   refreshKey?: number;
+
+  // Search marker
+  searchMarker?: {
+    longitude: number;
+    latitude: number;
+    label?: string;
+  } | null;
 }
 
 const SimpleMap: React.FC<SimpleMapProps> = (props) => {
@@ -97,7 +105,8 @@ const SimpleMap: React.FC<SimpleMapProps> = (props) => {
     onHover,
     onClick,
     onViewStateChange,
-    refreshKey = 0
+    refreshKey = 0,
+    searchMarker = null
   } = props;
 
   //Helper function to handle different data input types
@@ -132,19 +141,18 @@ const SimpleMap: React.FC<SimpleMapProps> = (props) => {
   //Create HexagonLayer to visualize data in 3D
   const layers = useMemo(() => {
     const dataSource = getDataSource(data);
+    const allLayers: Layer[] = [];
 
     if (Array.isArray(dataSource) && dataSource.length === 0) {
       console.log("SimpleMap: Empty data array, not creating layer");
-      return [];
-    }
+    } else {
+      //Debug statements
+      console.log("SimpleMap: Creating HexagonLayer with data source",
+                  typeof dataSource === 'string' ? dataSource : `Array with ${dataSource.length} items`);
+      console.log(`SimpleMap: Layer dependencies changed, recreating HexagonLayer with refreshKey: ${refreshKey}`);
 
-    //Debug statements
-    console.log("SimpleMap: Creating HexagonLayer with data source",
-                typeof dataSource === 'string' ? dataSource : `Array with ${dataSource.length} items`);
-    console.log(`SimpleMap: Layer dependencies changed, recreating HexagonLayer with refreshKey: ${refreshKey}`);
-
-    return [
-      new HexagonLayer({
+      allLayers.push(
+        new HexagonLayer({
         id: `hexagon-${refreshKey}`, //Include refresh key to force layer recreation
         data: dataSource,
         opacity,
@@ -207,8 +215,38 @@ const SimpleMap: React.FC<SimpleMapProps> = (props) => {
           return false;
         }
       })
-    ];
-  }, [data, opacity, cellSize, colorRange, colorDomain, aggregation, pickable, onHover, onClick, refreshKey]);
+      );
+    }
+
+    // Add search marker if provided
+    if (searchMarker) {
+      // Create an SVG pin icon data URL
+      const pinIcon = `data:image/svg+xml;utf8,${encodeURIComponent(`
+        <svg width="48" height="48" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#EF4444" stroke="#991B1B" stroke-width="1" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+        </svg>
+      `)}`;
+
+      allLayers.push(
+        new IconLayer({
+          id: 'search-marker',
+          data: [searchMarker],
+          getIcon: () => ({
+            url: pinIcon,
+            width: 48,
+            height: 48,
+            anchorY: 48,
+          }),
+          getPosition: (d) => [d.longitude, d.latitude],
+          getSize: 48,
+          sizeScale: 1,
+          pickable: true,
+        })
+      );
+    }
+
+    return allLayers;
+  }, [data, opacity, cellSize, colorRange, colorDomain, aggregation, pickable, onHover, onClick, refreshKey, searchMarker]);
 
   return (
     <div 

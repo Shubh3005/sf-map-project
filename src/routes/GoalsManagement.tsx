@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 
@@ -42,11 +43,25 @@ interface GoalsStats {
 }
 
 const GoalsManagement: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [selectedCity, setSelectedCity] = useState<string>('Oakland');
   const [goals, setGoals] = useState<CityGoal[]>([]);
   const [stats, setStats] = useState<GoalsStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddGoal, setShowAddGoal] = useState(false);
+
+  // Navigation handler - toggles between two routes
+  const handleLogoClick = useCallback(() => {
+    // Toggle between Westgate Demo (/) and Goals Management (/goals)
+    navigate(location.pathname === '/' ? '/goals' : '/');
+  }, [location.pathname, navigate]);
+
+  // Get next route name for tooltip
+  const getNextRouteName = useCallback(() => {
+    return location.pathname === '/' ? 'Goals Management' : 'Westgate Demo';
+  }, [location.pathname]);
   const [newGoal, setNewGoal] = useState({
     goal_title: '',
     goal_description: '',
@@ -189,23 +204,45 @@ const GoalsManagement: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      {/* Header */}
-      <div className="bg-black/70 backdrop-blur-md border-b border-gray-700 p-6">
-        <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+      {/* Header - Enhanced */}
+      <div className="backdrop-blur-xl bg-gradient-to-r from-slate-900/95 via-slate-800/95 to-slate-900/95 border-b border-slate-700/50 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">City Goals Management</h1>
-              <p className="text-gray-400 mt-2">Train Theages on your city's priorities and development goals</p>
-            </div>
-            
-            {/* City Selector */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium">City:</label>
+            {/* Logo Section with Navigation */}
+            <button
+              onClick={handleLogoClick}
+              className="flex items-center gap-4 group relative cursor-pointer hover:opacity-90 transition-opacity"
+              title={`Switch to ${getNextRouteName()}`}
+            >
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-2.5 shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
+                <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="font-bold text-2xl text-white tracking-tight group-hover:text-blue-300 transition-colors">
+                  Goals Management
+                </h1>
+                <p className="text-xs text-slate-400 font-medium">
+                  City Priorities & Development Goals
+                </p>
+              </div>
+
+              {/* Tooltip */}
+              <div className="absolute -bottom-12 left-0 bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg border border-slate-700 z-50">
+                Switch to {getNextRouteName()}
+                <div className="absolute -top-1 left-4 w-2 h-2 bg-slate-800 border-l border-t border-slate-700 transform rotate-45"></div>
+              </div>
+            </button>
+
+            {/* City Selector - Enhanced */}
+            <div className="flex items-center gap-4 bg-slate-800/50 rounded-lg px-4 py-2 border border-slate-700/50">
+              <label className="text-sm font-medium text-slate-300">City:</label>
               <select
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
-                className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                className="bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
               >
                 {cities.map(city => (
                   <option key={city} value={city}>{city}</option>
