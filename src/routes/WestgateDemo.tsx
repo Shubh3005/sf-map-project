@@ -404,7 +404,8 @@ const WestgateDemo: React.FC = () => {
                     currentData={generatedReport.report.summary}
                     onRecommendationSelect={(rec) => {
                       console.log('Selected recommendation:', rec);
-                      // TODO: Show detailed recommendation modal
+                      // Show detailed recommendation in a modal or expand the recommendation
+                      alert(`Recommendation Details:\n\nGoal: ${rec.city_goal.metadata.original_text}\n\nPolicy: ${rec.policy_document.metadata.original_text}\n\nImplementation: ${rec.implementation_steps}\n\nImpact: ${rec.estimated_impact}`);
                     }}
                   />
                 </div>

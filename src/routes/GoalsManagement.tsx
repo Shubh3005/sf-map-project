@@ -64,6 +64,7 @@ const GoalsManagement: React.FC = () => {
     geographic_scope: 'local',
     topic_tags: []
   });
+  const [showAddPolicy, setShowAddPolicy] = useState(false);
 
   const cities = ['Oakland', 'San Francisco', 'Berkeley', 'Fremont', 'Hayward'];
 
@@ -109,6 +110,7 @@ const GoalsManagement: React.FC = () => {
         body: JSON.stringify({
           city_name: selectedCity,
           goals: [{
+            city_name: selectedCity,
             ...newGoal,
             target_value: newGoal.target_value ? parseFloat(newGoal.target_value) : null,
             deadline: newGoal.deadline || null
@@ -132,9 +134,14 @@ const GoalsManagement: React.FC = () => {
         setShowAddGoal(false);
         loadCityGoals();
         loadCityStats();
+      } else {
+        const errorData = await response.json();
+        console.error('Error adding goal:', errorData);
+        alert(`Error: ${errorData.detail || 'Failed to add goal'}`);
       }
     } catch (error) {
       console.error('Error adding goal:', error);
+      alert(`Error: ${error.message || 'Failed to add goal'}`);
     }
   };
 
@@ -163,10 +170,16 @@ const GoalsManagement: React.FC = () => {
           geographic_scope: 'local',
           topic_tags: []
         });
+        setShowAddPolicy(false);
         loadCityStats();
+      } else {
+        const errorData = await response.json();
+        console.error('Error adding policy:', errorData);
+        alert(`Error: ${errorData.detail || 'Failed to add policy'}`);
       }
     } catch (error) {
       console.error('Error adding policy:', error);
+      alert(`Error: ${error.message || 'Failed to add policy'}`);
     }
   };
 
@@ -260,7 +273,7 @@ const GoalsManagement: React.FC = () => {
             Add New Goal
           </Button>
           <Button
-            onClick={() => {/* TODO: Add policy upload modal */}}
+            onClick={() => setShowAddPolicy(true)}
             className="bg-purple-600 hover:bg-purple-700 text-white"
           >
             Upload Policy Document
@@ -431,6 +444,119 @@ const GoalsManagement: React.FC = () => {
                   </Button>
                   <Button
                     onClick={() => setShowAddGoal(false)}
+                    className="bg-gray-700 hover:bg-gray-600 text-white"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Policy Modal */}
+        {showAddPolicy && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="bg-gray-900 rounded-lg shadow-2xl border border-gray-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Upload Policy Document</h2>
+                  <button
+                    onClick={() => setShowAddPolicy(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Source</label>
+                    <input
+                      type="text"
+                      value={newPolicy.source}
+                      onChange={(e) => setNewPolicy({...newPolicy, source: e.target.value})}
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      placeholder="e.g., City of Oakland, HUD Guidelines"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Title</label>
+                    <input
+                      type="text"
+                      value={newPolicy.title}
+                      onChange={(e) => setNewPolicy({...newPolicy, title: e.target.value})}
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      placeholder="e.g., Affordable Housing Policy"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Content</label>
+                    <textarea
+                      value={newPolicy.content}
+                      onChange={(e) => setNewPolicy({...newPolicy, content: e.target.value})}
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white h-32"
+                      placeholder="Policy content, guidelines, or best practices..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Document Type</label>
+                      <select
+                        value={newPolicy.document_type}
+                        onChange={(e) => setNewPolicy({...newPolicy, document_type: e.target.value})}
+                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      >
+                        <option value="best_practice">Best Practice</option>
+                        <option value="policy">Policy</option>
+                        <option value="guideline">Guideline</option>
+                        <option value="regulation">Regulation</option>
+                        <option value="research">Research</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Geographic Scope</label>
+                      <select
+                        value={newPolicy.geographic_scope}
+                        onChange={(e) => setNewPolicy({...newPolicy, geographic_scope: e.target.value})}
+                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      >
+                        <option value="local">Local</option>
+                        <option value="regional">Regional</option>
+                        <option value="state">State</option>
+                        <option value="national">National</option>
+                        <option value="international">International</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Topic Tags (comma-separated)</label>
+                    <input
+                      type="text"
+                      value={newPolicy.topic_tags.join(', ')}
+                      onChange={(e) => setNewPolicy({...newPolicy, topic_tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)})}
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                      placeholder="e.g., housing, sustainability, transportation"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    onClick={handleAddPolicy}
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    Upload Policy
+                  </Button>
+                  <Button
+                    onClick={() => setShowAddPolicy(false)}
                     className="bg-gray-700 hover:bg-gray-600 text-white"
                   >
                     Cancel
