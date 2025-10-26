@@ -3,10 +3,33 @@ import { Map, useControl } from 'react-map-gl/maplibre';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { PickingInfo } from '@deck.gl/core';
 import { HexagonLayer } from '@deck.gl/aggregation-layers';
-import { IconLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, IconLayer } from '@deck.gl/layers';
 import { Layer } from '@deck.gl/core';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+
+// Define SF311 types locally to avoid import issues
+export interface SF311Issue {
+  id: string;
+  title: string;
+  description: string;
+  severity: 'high' | 'medium' | 'low';
+  source: string;
+  coordinates?: [number, number]; // [longitude, latitude]
+  neighborhood?: string;
+  metadata: Record<string, any>;
+}
+
+export interface SF311Request {
+  id: string;
+  offense_type: string;
+  description: string;
+  address: string;
+  coordinates?: [number, number]; // [longitude, latitude]
+  neighborhood?: string;
+  severity: 'high' | 'medium' | 'low';
+  offense_id: string;
+}
 
 // Define types
 type Color = [number, number, number, number];
@@ -67,6 +90,10 @@ export interface SimpleMapProps {
   aggregation?: 'SUM' | 'MEAN' | 'MIN' | 'MAX';
   colorDomain?: [number, number];
 
+  // SF311 Data
+  sf311Issues?: SF311Issue[];
+  sf311Requests?: SF311Request[];
+
   // Interactivity
   pickable?: boolean;
   onHover?: (info: PickingInfo) => void;
@@ -101,6 +128,8 @@ const SimpleMap: React.FC<SimpleMapProps> = (props) => {
     cellSize = 12,
     aggregation = 'SUM',
     colorDomain = [0, 20],
+    sf311Issues = [],
+    sf311Requests = [],
     pickable = false,
     onHover,
     onClick,
@@ -218,6 +247,132 @@ const SimpleMap: React.FC<SimpleMapProps> = (props) => {
       );
     }
 
+    // Add SF311 Issues as red dots
+    if (sf311Issues.length > 0) {
+      console.log(`🗺️ SimpleMap: Processing ${sf311Issues.length} SF311 issues`);
+      
+      const validIssues = sf311Issues.filter(issue => {
+        const isValid = issue.coordinates && 
+          issue.coordinates.length === 2 && 
+          !isNaN(issue.coordinates[0]) && 
+          !isNaN(issue.coordinates[1]);
+        
+        if (!isValid) {
+          console.log(`❌ Invalid coordinates for issue ${issue.id}:`, issue.coordinates);
+        } else {
+          console.log(`✅ Valid coordinates for issue ${issue.id}:`, issue.coordinates, `(${issue.coordinates[1]}, ${issue.coordinates[0]})`);
+        }
+        
+        return isValid;
+      });
+
+      console.log(`🗺️ SimpleMap: ${validIssues.length} valid SF311 issues will be displayed`);
+
+      if (validIssues.length > 0) {
+        const issuesLayer = new ScatterplotLayer({
+          id: `sf311-issues-${refreshKey}`,
+          data: validIssues,
+          getPosition: (d: SF311Issue) => d.coordinates!,
+          getRadius: (d: SF311Issue) => {
+            // Make dots much larger for testing
+            switch (d.severity) {
+              case 'high': return 50;
+              case 'medium': return 30;
+              case 'low': return 20;
+              default: return 15;
+            }
+          },
+          getFillColor: (d: SF311Issue) => {
+            // Color based on severity - make more opaque for testing
+            switch (d.severity) {
+              case 'high': return [239, 68, 68, 255]; // Red - fully opaque
+              case 'medium': return [251, 146, 60, 255]; // Orange - fully opaque
+              case 'low': return [34, 197, 94, 255]; // Green - fully opaque
+              default: return [156, 163, 175, 255]; // Gray - fully opaque
+            }
+          },
+          getLineColor: (d: SF311Issue) => {
+            // Border color based on severity
+            switch (d.severity) {
+              case 'high': return [185, 28, 28, 255]; // Dark red
+              case 'medium': return [194, 65, 12, 255]; // Dark orange
+              case 'low': return [21, 128, 61, 255]; // Dark green
+              default: return [107, 114, 128, 255]; // Dark gray
+            }
+          },
+          lineWidthMinPixels: 1,
+          pickable,
+          onHover: (info) => {
+            if (onHover) {
+              onHover(info);
+            }
+            return false;
+          },
+          onClick: (info) => {
+            if (onClick) {
+              onClick(info);
+            }
+            return false;
+          }
+        });
+        
+        console.log(`🗺️ SimpleMap: Created SF311 issues layer with ${validIssues.length} points`);
+        console.log(`🗺️ SimpleMap: Sample issue data:`, validIssues[0]);
+        allLayers.push(issuesLayer);
+      }
+    }
+
+    // Add SF311 Raw Requests as smaller blue dots
+    if (sf311Requests.length > 0) {
+      console.log(`🗺️ SimpleMap: Processing ${sf311Requests.length} SF311 raw requests`);
+      
+      const validRequests = sf311Requests.filter(request => {
+        const isValid = request.coordinates && 
+          request.coordinates.length === 2 && 
+          !isNaN(request.coordinates[0]) && 
+          !isNaN(request.coordinates[1]);
+        
+        if (!isValid) {
+          console.log(`❌ Invalid coordinates for request ${request.id}:`, request.coordinates);
+        } else {
+          console.log(`✅ Valid coordinates for request ${request.id}:`, request.coordinates, `(${request.coordinates[1]}, ${request.coordinates[0]})`);
+        }
+        
+        return isValid;
+      });
+
+      console.log(`🗺️ SimpleMap: ${validRequests.length} valid SF311 raw requests will be displayed`);
+
+      if (validRequests.length > 0) {
+        const requestsLayer = new ScatterplotLayer({
+          id: `sf311-requests-${refreshKey}`,
+          data: validRequests,
+          getPosition: (d: SF311Request) => d.coordinates!,
+          getRadius: 15, // Make raw request dots larger for testing
+          getFillColor: [59, 130, 246, 255], // Blue - fully opaque for testing
+          getLineColor: [29, 78, 216, 255], // Dark blue border
+          lineWidthMinPixels: 0.5,
+          pickable,
+          onHover: (info) => {
+            if (onHover) {
+              onHover(info);
+            }
+            return false;
+          },
+          onClick: (info) => {
+            if (onClick) {
+              onClick(info);
+            }
+            return false;
+          }
+        });
+        
+        console.log(`🗺️ SimpleMap: Created SF311 requests layer with ${validRequests.length} points`);
+        console.log(`🗺️ SimpleMap: Sample request data:`, validRequests[0]);
+        allLayers.push(requestsLayer);
+      }
+    }
+
     // Add search marker if provided
     if (searchMarker) {
       // Create an SVG pin icon data URL
@@ -245,8 +400,13 @@ const SimpleMap: React.FC<SimpleMapProps> = (props) => {
       );
     }
 
+    console.log(`🗺️ SimpleMap: Total layers created: ${allLayers.length}`);
+    allLayers.forEach((layer, index) => {
+      console.log(`🗺️ SimpleMap: Layer ${index + 1}: ${layer.id}`);
+    });
+
     return allLayers;
-  }, [data, opacity, cellSize, colorRange, colorDomain, aggregation, pickable, onHover, onClick, refreshKey, searchMarker]);
+  }, [data, opacity, cellSize, colorRange, colorDomain, aggregation, sf311Issues, sf311Requests, pickable, onHover, onClick, refreshKey, searchMarker]);
 
   return (
     <div 

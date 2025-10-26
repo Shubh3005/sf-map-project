@@ -7,10 +7,35 @@ import SolutionDetailPanel from '../components/SolutionDetailPanel';
 import ReportBuilder from '../components/ReportBuilder';
 import CityDetailsPanel from '../components/CityDetailsPanel';
 import SearchBar from '../components/SearchBar';
+import SF311Popup from '../components/SF311Popup';
+import NeighborhoodInsightsPanel from '../components/NeighborhoodInsightsPanel';
 import type { CityData, Problem, Solution } from '../data/mockCities';
 import { mockCities } from '../data/mockCities';
 import { generateCityReport } from '../utils/pdfGenerator';
 import { apiService } from '../services/api';
+
+// Define SF311 types locally
+interface SF311Issue {
+  id: string;
+  title: string;
+  description: string;
+  severity: 'high' | 'medium' | 'low';
+  source: string;
+  coordinates?: [number, number]; // [longitude, latitude]
+  neighborhood?: string;
+  metadata: Record<string, any>;
+}
+
+interface SF311Request {
+  id: string;
+  offense_type: string;
+  description: string;
+  address: string;
+  coordinates?: [number, number]; // [longitude, latitude]
+  neighborhood?: string;
+  severity: 'high' | 'medium' | 'low';
+  offense_id: string;
+}
 
 interface ViewState {
   longitude: number;
@@ -57,6 +82,33 @@ const WestgateDemo: React.FC = () => {
   const [searchMarker, setSearchMarker] = useState<{ longitude: number; latitude: number; label?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [cityCache, setCityCache] = useState<Map<string, CityData>>(new Map());
+
+  // SF311 Agent state
+  const [sf311Issues, setSf311Issues] = useState<SF311Issue[]>([]);
+  const [sf311Requests, setSf311Requests] = useState<SF311Request[]>([]);
+  const [sf311Loading, setSf311Loading] = useState(false);
+  const [selectedSF311Item, setSelectedSF311Item] = useState<SF311Issue | SF311Request | null>(null);
+  const [showSF311Popup, setShowSF311Popup] = useState(false);
+  
+  // Neighborhood Insights
+  const [neighborhoodInsights, setNeighborhoodInsights] = useState<any[]>([]);
+  const [neighborhoodSummary, setNeighborhoodSummary] = useState<any>(null);
+  const [showNeighborhoodInsights, setShowNeighborhoodInsights] = useState(false);
+  const [neighborhoodLoading, setNeighborhoodLoading] = useState(false);
+
+  // Cache control
+  const [clearCache, setClearCache] = useState(false);
+  
+  // Neighborhood insights browser cache
+  const [neighborhoodCache, setNeighborhoodCache] = useState<{
+    insights: any[];
+    summary: any;
+    lastUpdated: string | null;
+  }>({
+    insights: [],
+    summary: null,
+    lastUpdated: null
+  });
 
   // Fetch city data when a searched city is selected
   useEffect(() => {
@@ -297,6 +349,136 @@ const WestgateDemo: React.FC = () => {
     return reportItems.some(item => item.solution.id === solutionId);
   }, [reportItems]);
 
+  // Launch SF311 Agent
+  const handleLaunchSF311Agent = useCallback(async () => {
+    // Prompt user for number of pages to fetch
+    const pagesInput = prompt('How many pages of SF311 data would you like to fetch? (1-50)', '5');
+    
+    if (pagesInput === null) {
+      // User cancelled
+      return;
+    }
+    
+    const pages = parseInt(pagesInput, 10);
+    
+    // Validate input
+    if (isNaN(pages) || pages < 1 || pages > 50) {
+      alert('Please enter a valid number between 1 and 50');
+      return;
+    }
+    
+    setSf311Loading(true);
+    try {
+      console.log(`🚀 Launching SF311 Agent with ${pages} pages...`);
+      const response = await apiService.launchSF311Agent(pages, undefined, 'low', clearCache);
+      
+      if (response.success) {
+        // Log detailed coordinate information
+        console.log('🔍 SF311 Issues with coordinates:');
+        response.issues.forEach((issue, index) => {
+          console.log(`Issue ${index + 1}:`, {
+            id: issue.id,
+            title: issue.title,
+            coordinates: issue.coordinates,
+            neighborhood: issue.neighborhood,
+            severity: issue.severity
+          });
+        });
+        
+        console.log('🔍 SF311 Raw Requests with coordinates:');
+        response.raw_requests.forEach((request, index) => {
+          console.log(`Request ${index + 1}:`, {
+            id: request.id,
+            offense_type: request.offense_type,
+            coordinates: request.coordinates,
+            neighborhood: request.neighborhood,
+            severity: request.severity
+          });
+        });
+        
+        setSf311Issues(response.issues);
+        setSf311Requests(response.raw_requests);
+        console.log(`✅ SF311 Agent completed: ${response.issues.length} issues, ${response.raw_requests.length} requests`);
+        
+        // Show summary
+        console.log('SF311 Summary:', response.summary);
+      } else {
+        console.error('❌ SF311 Agent failed');
+      }
+    } catch (error) {
+      console.error('❌ Error launching SF311 agent:', error);
+    } finally {
+      setSf311Loading(false);
+    }
+  }, []);
+
+  // Handle SF311 item click
+  const handleSF311ItemClick = useCallback((item: SF311Issue | SF311Request) => {
+    setSelectedSF311Item(item);
+    setShowSF311Popup(true);
+  }, []);
+
+  // Generate Neighborhood Insights
+  const handleGenerateNeighborhoodInsights = useCallback(async () => {
+    // Check if we have cached insights
+    if (neighborhoodCache.insights.length > 0 && neighborhoodCache.lastUpdated) {
+      const cacheAge = Date.now() - new Date(neighborhoodCache.lastUpdated).getTime();
+      const cacheAgeMinutes = cacheAge / (1000 * 60);
+      
+      if (cacheAgeMinutes < 30) { // Cache valid for 30 minutes
+        console.log('🏘️ Using cached neighborhood insights');
+        setNeighborhoodInsights(neighborhoodCache.insights);
+        setNeighborhoodSummary(neighborhoodCache.summary);
+        setShowNeighborhoodInsights(true);
+        return;
+      }
+    }
+    
+    // Prompt user for number of pages to fetch
+    const pagesInput = prompt('How many pages of SF311 data for neighborhood analysis? (1-20)', '5');
+    
+    if (pagesInput === null) {
+      // User cancelled
+      return;
+    }
+    
+    const pages = parseInt(pagesInput, 10);
+    
+    // Validate input
+    if (isNaN(pages) || pages < 1 || pages > 20) {
+      alert('Please enter a valid number between 1 and 20');
+      return;
+    }
+    
+    setNeighborhoodLoading(true);
+    try {
+      console.log(`🏘️ Generating neighborhood insights with ${pages} pages...`);
+      const response = await apiService.getNeighborhoodInsights(pages);
+      
+      if (response.success) {
+        // Update browser cache
+        const newCache = {
+          insights: response.neighborhood_insights,
+          summary: response.summary,
+          lastUpdated: new Date().toISOString()
+        };
+        setNeighborhoodCache(newCache);
+        
+        // Update display
+        setNeighborhoodInsights(response.neighborhood_insights);
+        setNeighborhoodSummary(response.summary);
+        setShowNeighborhoodInsights(true);
+        console.log(`✅ Neighborhood insights generated: ${response.neighborhood_insights.length} neighborhoods`);
+      } else {
+        console.error('❌ Neighborhood insights generation failed');
+      }
+    } catch (error) {
+      console.error('❌ Error generating neighborhood insights:', error);
+    } finally {
+      setNeighborhoodLoading(false);
+    }
+  }, [neighborhoodCache]);
+
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Top Header Bar - Enhanced */}
@@ -344,6 +526,45 @@ const WestgateDemo: React.FC = () => {
 
           {/* Action Section - Enhanced */}
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={clearCache}
+                  onChange={(e) => setClearCache(e.target.checked)}
+                  className="w-4 h-4 text-red-600 bg-slate-800 border-slate-600 rounded focus:ring-red-500 focus:ring-2"
+                />
+                Clear Cache
+              </label>
+            </div>
+            <button
+              onClick={handleLaunchSF311Agent}
+              disabled={sf311Loading}
+              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-red-500/30 disabled:shadow-none flex items-center gap-2"
+            >
+              {sf311Loading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              )}
+              {sf311Loading ? 'Launching...' : 'Launch Agents'}
+            </button>
+            <button
+              onClick={handleGenerateNeighborhoodInsights}
+              disabled={neighborhoodLoading}
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/30 disabled:shadow-none flex items-center gap-2"
+            >
+              {neighborhoodLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              )}
+              {neighborhoodLoading ? 'Analyzing...' : 'Neighborhood Insights'}
+            </button>
             <button
               onClick={() => setShowReportBuilder(!showReportBuilder)}
               className={`text-right rounded-lg px-4 py-2 border transition-all ${
@@ -387,13 +608,26 @@ const WestgateDemo: React.FC = () => {
           cellSize={15}
           colorDomain={[0, 20]}
           aggregation="SUM"
+          sf311Issues={sf311Issues}
+          sf311Requests={sf311Requests}
           pickable={true}
           viewState={viewState}
           onViewStateChange={handleViewStateChange}
-          onHover={() => {
-            // Hover functionality can be added here
+          onHover={(info) => {
+            // Handle hover for SF311 items
+            if (info.object && (info.object.id || info.object.offense_id)) {
+              // This is an SF311 item
+              console.log('SF311 item hovered:', info.object);
+            }
           }}
-          refreshKey={0}
+          onClick={(info) => {
+            // Handle click for SF311 items
+            if (info.object && (info.object.id || info.object.offense_id)) {
+              // This is an SF311 item
+              handleSF311ItemClick(info.object);
+            }
+          }}
+          refreshKey={sf311Issues.length + sf311Requests.length}
           searchMarker={searchMarker}
         />
       </div>
@@ -515,7 +749,7 @@ const WestgateDemo: React.FC = () => {
 
       {/* Stats Bar - Enhanced */}
       <div className="absolute bottom-6 right-6 z-10 bg-slate-900/95 backdrop-blur-xl rounded-xl border border-slate-700/50 p-5 shadow-2xl">
-        <div className="flex gap-8">
+        <div className="flex gap-6">
           <div className="text-center">
             <div className="text-slate-400 text-xs font-medium mb-1.5">Total Cities</div>
             <div className="text-white font-bold text-2xl">{mockCities.length}</div>
@@ -529,13 +763,41 @@ const WestgateDemo: React.FC = () => {
           </div>
           <div className="border-l border-slate-700"></div>
           <div className="text-center">
-            <div className="text-slate-400 text-xs font-medium mb-1.5">Total Issues</div>
-            <div className="text-blue-400 font-bold text-2xl">
-              {mockCities.reduce((sum, city) => sum + city.problems.length, 0)}
-            </div>
+            <div className="text-slate-400 text-xs font-medium mb-1.5">SF311 Issues</div>
+            <div className="text-orange-400 font-bold text-2xl">{sf311Issues.length}</div>
+          </div>
+          <div className="border-l border-slate-700"></div>
+          <div className="text-center">
+            <div className="text-slate-400 text-xs font-medium mb-1.5">SF311 Requests</div>
+            <div className="text-blue-400 font-bold text-2xl">{sf311Requests.length}</div>
           </div>
         </div>
       </div>
+
+      {/* SF311 Popup */}
+      {showSF311Popup && selectedSF311Item && (
+        <SF311Popup
+          issue={selectedSF311Item && 'title' in selectedSF311Item ? selectedSF311Item : null}
+          request={selectedSF311Item && 'offense_type' in selectedSF311Item ? selectedSF311Item : null}
+          onClose={() => {
+            setShowSF311Popup(false);
+            setSelectedSF311Item(null);
+          }}
+        />
+      )}
+
+      {/* Neighborhood Insights Panel */}
+      {showNeighborhoodInsights && neighborhoodInsights.length > 0 && neighborhoodSummary && (
+        <NeighborhoodInsightsPanel
+          insights={neighborhoodInsights}
+          summary={neighborhoodSummary}
+          onClose={() => {
+            setShowNeighborhoodInsights(false);
+            setNeighborhoodInsights([]);
+            setNeighborhoodSummary(null);
+          }}
+        />
+      )}
     </div>
   );
 };

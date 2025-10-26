@@ -1,6 +1,72 @@
 // API service for communicating with the backend
 const API_BASE_URL = 'http://localhost:8000/api';
 
+// Define SF311 types locally to avoid import issues
+export interface SF311Issue {
+  id: string;
+  title: string;
+  description: string;
+  severity: 'high' | 'medium' | 'low';
+  source: string;
+  coordinates?: [number, number]; // [longitude, latitude]
+  neighborhood?: string;
+  metadata: Record<string, any>;
+}
+
+export interface SF311Request {
+  id: string;
+  offense_type: string;
+  description: string;
+  address: string;
+  coordinates?: [number, number]; // [longitude, latitude]
+  neighborhood?: string;
+  severity: 'high' | 'medium' | 'low';
+  offense_id: string;
+}
+
+export interface SF311Response {
+  success: boolean;
+  status: string;
+  issues: SF311Issue[];
+  raw_requests: SF311Request[];
+  summary: {
+    total_requests: number;
+    filtered_requests: number;
+    issues_identified: number;
+    geographic_patterns: Record<string, any>;
+    insights: string[];
+  };
+  execution_time: number;
+}
+
+export interface NeighborhoodInsight {
+  neighborhood: string;
+  total_requests: number;
+  top_issue_types: Record<string, number>;
+  severity_distribution: {
+    high: number;
+    medium: number;
+    low: number;
+  };
+  sample_requests: Array<{
+    offense_type: string;
+    description: string;
+    severity: 'high' | 'medium' | 'low';
+    address: string;
+  }>;
+  llm_insights: string[];
+}
+
+export interface NeighborhoodInsightsResponse {
+  success: boolean;
+  neighborhood_insights: NeighborhoodInsight[];
+  summary: {
+    total_neighborhoods: number;
+    total_requests: number;
+    most_active_neighborhood: string | null;
+  };
+}
+
 export interface Problem {
   id: string;
   title: string;
@@ -81,6 +147,7 @@ export interface ReportResponse {
   report?: CityReport;
   error?: string;
 }
+
 
 class ApiService {
   private baseUrl: string;
@@ -173,6 +240,39 @@ class ApiService {
     }
   }
 
+  async getNeighborhoodInsights(pages: number = 10, minSeverity: string = 'low'): Promise<NeighborhoodInsightsResponse> {
+    try {
+      console.log('🏘️ Getting neighborhood insights...');
+      console.log(`📡 API URL: ${this.baseUrl}/agents/sf311/neighborhood-insights`);
+      
+      const params = new URLSearchParams({
+        pages: pages.toString(),
+        min_severity: minSeverity
+      });
+
+      const response = await fetch(`${this.baseUrl}/agents/sf311/neighborhood-insights?${params}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Neighborhood Insights Error ${response.status}:`, errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Neighborhood insights generated successfully:', data);
+      
+      return data;
+    } catch (error) {
+      console.error('❌ Error getting neighborhood insights:', error);
+      throw error;
+    }
+  }
+
   async testConnection(): Promise<{success: boolean, data?: any, error?: string}> {
     try {
       console.log('🔍 Testing backend connection...');
@@ -202,6 +302,66 @@ class ApiService {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
       };
+    }
+  }
+
+  async launchSF311Agent(pages: number = 1, filterTypes?: string[], minSeverity: string = 'low', clearCache: boolean = false): Promise<SF311Response> {
+    try {
+      console.log('🚀 Launching SF311 agent...');
+      console.log(`📡 API URL: ${this.baseUrl}/agents/sf311/launch`);
+      
+      const params = new URLSearchParams({
+        pages: pages.toString(),
+        min_severity: minSeverity,
+        clear_cache: clearCache.toString()
+      });
+      
+      if (filterTypes && filterTypes.length > 0) {
+        filterTypes.forEach(type => params.append('filter_types', type));
+      }
+
+      const response = await fetch(`${this.baseUrl}/agents/sf311/launch?${params}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ SF311 Agent Error ${response.status}:`, errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ SF311 Agent launched successfully:', data);
+      
+      return data;
+    } catch (error) {
+      console.error('❌ Error launching SF311 agent:', error);
+      throw error;
+    }
+  }
+
+  async getSF311Data(): Promise<SF311Response> {
+    try {
+      console.log('📊 Fetching SF311 data...');
+      
+      const response = await fetch(`${this.baseUrl}/agents/sf311/data`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error fetching SF311 data:', error);
+      throw error;
     }
   }
 }
