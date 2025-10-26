@@ -8,8 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
-  }
-,
+  },
   "dependencies": {
     "@deck.gl/geo-layers": "^9.2.2",
     "@deck.gl/layers": "^9.2.2",
@@ -24,6 +23,7 @@
     "clsx": "^2.1.1",
     "d3-ease": "^3.0.1",
     "deck.gl": "^9.2.2",
+    "jspdf": "^3.0.3",
     "lucide-react": "^0.547.0",
     "mapbox-gl": "^3.16.0",
     "maplibre-gl": "^5.9.0",

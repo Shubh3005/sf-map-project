@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { cn } from '../lib/utils';
 
 interface GoalRecommendation {
   city_goal: {
