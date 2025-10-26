@@ -170,7 +170,6 @@ const GoalsManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Error adding goal:', error);
-      alert(`Error: ${error.message || 'Failed to add goal'}`);
     }
   };
 
@@ -209,7 +208,6 @@ const GoalsManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Error adding policy:', error);
-      alert(`Error: ${error.message || 'Failed to add policy'}`);
     }
   };
 
