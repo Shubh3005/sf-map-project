@@ -69,7 +69,13 @@ const GoalsManagement: React.FC = () => {
     target_value: '',
     target_unit: '',
     priority_level: 'medium' as 'high' | 'medium' | 'low',
-    deadline: ''
+    deadline: '',
+    budget_min: '',
+    budget_max: '',
+    related_legislation: '',
+    category: 'housing' as 'housing' | 'economic' | 'safety' | 'environment' | 'infrastructure' | 'social',
+    timeline_preference: 'medium' as 'immediate' | 'short' | 'medium' | 'long',
+    success_criteria: ''
   });
   const [newPolicy, setNewPolicy] = useState<PolicyDocument>({
     source: '',
@@ -142,7 +148,13 @@ const GoalsManagement: React.FC = () => {
           target_value: '',
           target_unit: '',
           priority_level: 'medium',
-          deadline: ''
+          deadline: '',
+          budget_min: '',
+          budget_max: '',
+          related_legislation: '',
+          category: 'housing',
+          timeline_preference: 'medium',
+          success_criteria: ''
         });
         setShowAddGoal(false);
         loadCityGoals();
@@ -446,6 +458,79 @@ const GoalsManagement: React.FC = () => {
                         placeholder="percentage, count, etc."
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Goal Category</label>
+                    <select
+                      value={newGoal.category}
+                      onChange={(e) => setNewGoal({...newGoal, category: e.target.value as typeof newGoal.category})}
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    >
+                      <option value="housing">Housing & Development</option>
+                      <option value="economic">Economic Vitality</option>
+                      <option value="safety">Public Safety</option>
+                      <option value="environment">Environmental Quality</option>
+                      <option value="infrastructure">Infrastructure</option>
+                      <option value="social">Social Services</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Related Legislation / Initiatives (Optional)</label>
+                    <textarea
+                      value={newGoal.related_legislation}
+                      onChange={(e) => setNewGoal({...newGoal, related_legislation: e.target.value})}
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white h-20"
+                      placeholder="e.g., Prop 1 Housing Bond, SB 50, local ordinances..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Budget Range (Min)</label>
+                      <input
+                        type="number"
+                        value={newGoal.budget_min}
+                        onChange={(e) => setNewGoal({...newGoal, budget_min: e.target.value})}
+                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                        placeholder="$100,000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Budget Range (Max)</label>
+                      <input
+                        type="number"
+                        value={newGoal.budget_max}
+                        onChange={(e) => setNewGoal({...newGoal, budget_max: e.target.value})}
+                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                        placeholder="$500,000"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Implementation Timeline</label>
+                    <select
+                      value={newGoal.timeline_preference}
+                      onChange={(e) => setNewGoal({...newGoal, timeline_preference: e.target.value as typeof newGoal.timeline_preference})}
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    >
+                      <option value="immediate">Immediate (0-6 months)</option>
+                      <option value="short">Short-term (6-12 months)</option>
+                      <option value="medium">Medium-term (1-2 years)</option>
+                      <option value="long">Long-term (2+ years)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Success Criteria</label>
+                    <textarea
+                      value={newGoal.success_criteria}
+                      onChange={(e) => setNewGoal({...newGoal, success_criteria: e.target.value})}
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white h-20"
+                      placeholder="How will you measure success? e.g., 20% reduction in vacancy rate within 18 months"
+                    />
                   </div>
 
                   <div>
