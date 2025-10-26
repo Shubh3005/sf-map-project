@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FlyToInterpolator } from '@deck.gl/core';
 import SimpleMap from '../components/SimpleMap';
@@ -10,6 +10,7 @@ import SearchBar from '../components/SearchBar';
 import type { CityData, Problem, Solution } from '../data/mockCities';
 import { mockCities } from '../data/mockCities';
 import { generateCityReport } from '../utils/pdfGenerator';
+import { apiService } from '../services/api';
 
 interface ViewState {
   longitude: number;
@@ -54,6 +55,108 @@ const WestgateDemo: React.FC = () => {
   const [showReportBuilder, setShowReportBuilder] = useState(false);
   const [currentCityIndex, setCurrentCityIndex] = useState(0);
   const [searchMarker, setSearchMarker] = useState<{ longitude: number; latitude: number; label?: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [cityCache, setCityCache] = useState<Map<string, CityData>>(new Map());
+
+  // Fetch city data when a searched city is selected
+  useEffect(() => {
+    const fetchCityData = async () => {
+      if (!selectedCity) return;
+
+      // Skip API call for mock cities
+      if (mockCities.some(city => city.id === selectedCity.id)) {
+        return;
+      }
+
+      // Only fetch for searched cities that don't have data yet
+      if (selectedCity.id.startsWith('searched-') && selectedCity.problems.length === 0) {
+        const cacheKey = selectedCity.name.toLowerCase();
+        
+        // Check cache first
+        if (cityCache.has(cacheKey)) {
+          setSelectedCity(cityCache.get(cacheKey)!);
+          return;
+        }
+
+        setLoading(true);
+        try {
+          console.log(`Fetching data for ${selectedCity.name}...`);
+          const response = await apiService.generateReport({
+            location: selectedCity.name,
+            level: 'city'
+          });
+
+          if (response.success && response.report) {
+            const apiReport = response.report;
+            const cityPrefix = cacheKey.replace(/\s+/g, '-').toLowerCase();
+            
+            // Map problems
+            const problems = apiReport.problems.map((p: any, idx: number) => ({
+              id: `${cityPrefix}-${idx}`,
+              title: p.title,
+              description: p.description,
+              severity: p.severity,
+              metric: p.metrics?.metric || p.metric || 'Unknown',
+              value: p.metrics?.value || p.value || 0,
+              threshold: p.metrics?.threshold || p.threshold || 0,
+            }));
+
+            // Map solutions
+            const solutions = apiReport.problems
+              .filter((p: any) => p.solution)
+              .map((p: any, idx: number) => ({
+                id: `${cityPrefix}-sol-${idx}`,
+                title: p.solution.title,
+                description: p.solution.description,
+                steps: p.solution.steps || [],
+                estimatedCost: p.solution.estimated_cost || p.solution.estimatedCost || '',
+                costBreakdown: p.solution.costBreakdown || [],
+                timeline: p.solution.timeline || '',
+                impact: p.solution.impact || '',
+                implementationPhases: p.solution.implementationPhases || [],
+                successMetrics: p.solution.successMetrics || [],
+                requiredDepartments: p.solution.requiredDepartments || [],
+                stakeholders: p.solution.stakeholders || [],
+                fundingSources: p.solution.fundingSources || [],
+                similarCities: p.solution.similarCities || [],
+                risks: p.solution.risks || [],
+                category: p.solution.category || 'other',
+              }));
+
+            const updatedCity: CityData = {
+              ...selectedCity,
+              name: apiReport.county,
+              county: apiReport.county,
+              metrics: {
+                population: apiReport.summary.population || 0,
+                medianIncome: apiReport.summary.medianIncome || 0,
+                crimeRate: apiReport.summary.metrics?.crimeRate || 0,
+                vacancyRate: apiReport.summary.metrics?.vacancyRate || 0,
+                foreclosureRate: apiReport.summary.metrics?.foreclosureRate || 0,
+                taxDelinquency: 0,
+                unemploymentRate: apiReport.summary.metrics?.unemploymentRate || 0,
+                povertyRate: apiReport.summary.metrics?.povertyRate || 0,
+              },
+              riskLevel: (apiReport.summary.riskLevel as 'high' | 'medium' | 'low') || 'medium',
+              problems,
+              solutions,
+            };
+
+            // Cache it
+            setCityCache(prev => new Map(prev).set(cacheKey, updatedCity));
+            setSelectedCity(updatedCity);
+          }
+        } catch (error) {
+          console.error('Error fetching city data:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchCityData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCity?.name]);
 
   // Handle location search
   const handleLocationSelect = useCallback((longitude: number, latitude: number, cityName?: string) => {
@@ -346,6 +449,21 @@ const WestgateDemo: React.FC = () => {
                 city={selectedCity}
                 onViewAllProblems={() => setShowPopup(true)}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Indicator */}
+      {loading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6 shadow-2xl">
+            <div className="flex items-center gap-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <div>
+                <div className="text-white font-semibold text-lg">Loading city data...</div>
+                <div className="text-slate-400 text-sm">{selectedCity?.name}</div>
+              </div>
             </div>
           </div>
         </div>

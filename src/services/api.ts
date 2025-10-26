@@ -6,12 +6,31 @@ export interface Problem {
   title: string;
   description: string;
   severity: 'high' | 'medium' | 'low';
+  category?: string;
+  metric?: string;
+  value?: number;
+  threshold?: number;
   metrics: Record<string, any>;
   solution: {
     title: string;
     description: string;
     estimated_cost: string;
     expected_impact: string;
+    timeline?: string;
+    impact?: string;
+    steps?: string[];
+    costBreakdown?: Array<{item: string; amount: string}>;
+    implementationPhases?: Array<{
+      phase: string;
+      duration: string;
+      milestones: string[];
+    }>;
+    successMetrics?: string[];
+    similarCities?: Array<{city: string; outcome: string}>;
+    requiredDepartments?: string[];
+    stakeholders?: string[];
+    fundingSources?: string[];
+    risks?: string[];
   };
 }
 
@@ -20,10 +39,34 @@ export interface CityReport {
   generated_at: string;
   cached: boolean;
   summary: {
+    population?: number;
+    medianIncome?: number;
+    riskLevel?: string;
     data_sources: string[];
     last_data_update: string;
     geographic_level: string;
     relevant_datasets: string[];
+    metrics?: {
+      population?: number;
+      medianIncome?: number;
+      crimeRate?: number;
+      foreclosureRate?: number;
+      vacancyRate?: number;
+      unemploymentRate?: number;
+      homeValue?: number;
+      rentBurden?: number;
+      educationLevel?: number;
+      povertyRate?: number;
+      airQuality?: number;
+      treeCanopy?: number;
+      transitAccess?: number;
+      walkability?: number;
+      bikeability?: number;
+    };
+    demographics?: Record<string, any>;
+    economicIndicators?: Record<string, any>;
+    infrastructureMetrics?: Record<string, any>;
+    socialIndicators?: Record<string, any>;
   };
   problems: Problem[];
 }
