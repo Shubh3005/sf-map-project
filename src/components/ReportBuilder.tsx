@@ -1,5 +1,5 @@
 import React from 'react';
-import { Problem, Solution, CityData } from '../data/mockCities';
+import type { Problem, Solution, CityData } from '../data/mockCities';
 import { FileText, Download, Trash2, X } from 'lucide-react';
 
 interface ReportItem {

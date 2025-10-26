@@ -1,5 +1,5 @@
 import React from 'react';
-import { Solution } from '../data/mockCities';
+import type { Solution } from '../data/mockCities';
 import { X } from 'lucide-react';
 
 interface SolutionDetailPanelProps {

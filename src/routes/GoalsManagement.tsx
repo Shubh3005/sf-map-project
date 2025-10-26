@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { cn } from '../lib/utils';
 
 interface CityGoal {
   id: number;
@@ -165,7 +164,8 @@ const GoalsManagement: React.FC = () => {
     }
   };
 
-  const handleAddPolicy = async () => {
+  // @ts-ignore - Function reserved for future policy training feature
+  const handleAddPolicy = async (): Promise<void> => {
     try {
       const response = await fetch(`http://localhost:8000/api/goals/train`, {
         method: 'POST',

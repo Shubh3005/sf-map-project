@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { CityData, Problem, Solution } from '../data/mockCities';
+import type { CityData, Problem, Solution } from '../data/mockCities';
 
 interface ReportItem {
   problem: Problem;
@@ -63,13 +63,13 @@ export function generateCityReport(
   yPos += 15;
 
   // Risk Level Badge
-  const riskColors = {
+  const riskColors: Record<string, [number, number, number]> = {
     high: [239, 68, 68],    // red-500
     medium: [234, 179, 8],  // yellow-500
     low: [34, 197, 94],     // green-500
   };
-  const riskColor = riskColors[city.riskLevel] || [100, 116, 139];
-  doc.setFillColor(...riskColor);
+  const riskColor = riskColors[city.riskLevel] || [100, 116, 139] as [number, number, number];
+  doc.setFillColor(riskColor[0], riskColor[1], riskColor[2]);
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
