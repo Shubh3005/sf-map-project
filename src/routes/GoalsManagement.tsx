@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
-import { cn } from '../lib/utils';
+import DarkVeil from '../components/DarkVeil';
 
 interface CityGoal {
   id: number;
@@ -189,34 +189,58 @@ const GoalsManagement: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      {/* Header */}
-      <div className="bg-black/70 backdrop-blur-md border-b border-gray-700 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">City Goals Management</h1>
-              <p className="text-gray-400 mt-2">Train Theages on your city's priorities and development goals</p>
-            </div>
-            
-            {/* City Selector */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium">City:</label>
-              <select
-                value={selectedCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
-                className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
-              >
-                {cities.map(city => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
+    <>
+      {/* DarkVeil Background - Fixed Full Screen */}
+      <div 
+        className="fixed inset-0 z-0" 
+        style={{ 
+          width: '100vw', 
+          height: '100vh',
+          top: 0,
+          left: 0,
+          position: 'fixed'
+        }}
+      >
+        <DarkVeil 
+          hueShift={22}
+          noiseIntensity={0}
+          scanlineIntensity={0.1}
+          speed={1}
+          scanlineFrequency={0.01}
+          warpAmount={0}
+          resolutionScale={1}
+        />
+      </div>
+      
+      {/* Content Overlay */}
+      <div className="min-h-screen relative z-10 text-white">
+        {/* Header */}
+        <div className="bg-black/70 backdrop-blur-md border-b border-gray-700 p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold">City Goals Management</h1>
+                <p className="text-gray-400 mt-2">Train Theages on your city's priorities and development goals</p>
+              </div>
+              
+              {/* City Selector */}
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium">City:</label>
+                <select
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                  className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                >
+                  {cities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto p-6">
         {/* Stats Overview */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -441,7 +465,8 @@ const GoalsManagement: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
