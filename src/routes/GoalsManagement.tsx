@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import DarkVeil from '../components/DarkVeil';
 
@@ -42,11 +43,25 @@ interface GoalsStats {
 }
 
 const GoalsManagement: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [selectedCity, setSelectedCity] = useState<string>('Oakland');
   const [goals, setGoals] = useState<CityGoal[]>([]);
   const [stats, setStats] = useState<GoalsStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddGoal, setShowAddGoal] = useState(false);
+
+  // Navigation handler - toggles between two routes
+  const handleLogoClick = useCallback(() => {
+    // Toggle between Westgate Demo (/) and Goals Management (/goals)
+    navigate(location.pathname === '/' ? '/goals' : '/');
+  }, [location.pathname, navigate]);
+
+  // Get next route name for tooltip
+  const getNextRouteName = useCallback(() => {
+    return location.pathname === '/' ? 'Goals Management' : 'Westgate Demo';
+  }, [location.pathname]);
   const [newGoal, setNewGoal] = useState({
     goal_title: '',
     goal_description: '',

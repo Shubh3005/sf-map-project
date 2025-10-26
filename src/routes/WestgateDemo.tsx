@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FlyToInterpolator } from '@deck.gl/core';
 import SimpleMap from '../components/SimpleMap';
 import CityPopup from '../components/CityPopup';
@@ -31,6 +32,9 @@ interface GeneratedReport {
 }
 
 const WestgateDemo: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [viewState, setViewState] = useState<ViewState>({
     longitude: -121.4944,
     latitude: 38.5816,
@@ -38,6 +42,17 @@ const WestgateDemo: React.FC = () => {
     pitch: 45,
     bearing: 0,
   });
+
+  // Navigation handler - toggles between two routes
+  const handleLogoClick = useCallback(() => {
+    // Toggle between Westgate Demo (/) and Goals Management (/goals)
+    navigate(location.pathname === '/' ? '/goals' : '/');
+  }, [location.pathname, navigate]);
+
+  // Get next route name for tooltip
+  const getNextRouteName = useCallback(() => {
+    return location.pathname === '/' ? 'Goals Management' : 'Westgate Demo';
+  }, [location.pathname]);
 
   const [selectedCity, setSelectedCity] = useState<CityData | null>(mockCities[0]);
   const [selectedProblemId, setSelectedProblemId] = useState<string | null>(null);
@@ -49,6 +64,7 @@ const WestgateDemo: React.FC = () => {
     loading: false,
     error: null
   });
+  const [searchMarker, setSearchMarker] = useState<{ longitude: number; latitude: number; label?: string } | null>(null);
 
   // Handle location search
   const handleLocationSelect = useCallback((longitude: number, latitude: number, cityName?: string) => {
@@ -61,6 +77,13 @@ const WestgateDemo: React.FC = () => {
       transitionDuration: 2000,
       transitionInterpolator: new FlyToInterpolator(),
     }));
+
+    // Set search marker
+    setSearchMarker({
+      longitude,
+      latitude,
+      label: cityName || 'Searched Location'
+    });
 
     // Create a new city object for the searched location
     const searchedCity: CityData = {
@@ -86,7 +109,7 @@ const WestgateDemo: React.FC = () => {
 
     // Set the searched city as selected
     setSelectedCity(searchedCity);
-    
+
     console.log(`Selected searched location: ${cityName || 'Unknown'} at [${longitude}, ${latitude}]`);
   }, []);
 
@@ -117,16 +140,38 @@ const WestgateDemo: React.FC = () => {
   // Handle scrolling between cities
   const handleNextCity = useCallback(() => {
     const nextIndex = (currentCityIndex + 1) % mockCities.length;
+    const nextCity = mockCities[nextIndex];
     setCurrentCityIndex(nextIndex);
-    setSelectedCity(mockCities[nextIndex]);
+    setSelectedCity(nextCity);
     setShowPopup(false);
+
+    // Automatically fly to the next city
+    setViewState(prev => ({
+      ...prev,
+      longitude: nextCity.longitude,
+      latitude: nextCity.latitude,
+      zoom: 10,
+      transitionDuration: 2000,
+      transitionInterpolator: new FlyToInterpolator(),
+    }));
   }, [currentCityIndex]);
 
   const handlePrevCity = useCallback(() => {
     const prevIndex = currentCityIndex === 0 ? mockCities.length - 1 : currentCityIndex - 1;
+    const prevCity = mockCities[prevIndex];
     setCurrentCityIndex(prevIndex);
-    setSelectedCity(mockCities[prevIndex]);
+    setSelectedCity(prevCity);
     setShowPopup(false);
+
+    // Automatically fly to the previous city
+    setViewState(prev => ({
+      ...prev,
+      longitude: prevCity.longitude,
+      latitude: prevCity.latitude,
+      zoom: 10,
+      transitionDuration: 2000,
+      transitionInterpolator: new FlyToInterpolator(),
+    }));
   }, [currentCityIndex]);
 
   // Test backend connection
@@ -194,53 +239,81 @@ const WestgateDemo: React.FC = () => {
   ) || [];
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-gradient-to-b from-gray-800 to-black">
-      {/* Top Header Bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 backdrop-blur-md border-b bg-black/70 border-gray-700">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 rounded-lg p-2">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="relative h-screen w-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Top Header Bar - Enhanced */}
+      <div className="absolute top-0 left-0 right-0 z-20 backdrop-blur-xl bg-gradient-to-r from-slate-900/95 via-slate-800/95 to-slate-900/95 border-b border-slate-700/50 shadow-2xl">
+        <div className="px-8 py-4 flex items-center justify-between">
+          {/* Logo Section - Enhanced with Navigation */}
+          <button
+            onClick={handleLogoClick}
+            className="flex items-center gap-4 group relative cursor-pointer hover:opacity-90 transition-opacity"
+            title={`Switch to ${getNextRouteName()}`}
+          >
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-2.5 shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
+              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
             </div>
             <div>
-              <h1 className="font-bold text-xl text-white">
+              <h1 className="font-bold text-2xl text-white tracking-tight group-hover:text-blue-300 transition-colors">
                 Westgate
               </h1>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-400 font-medium">
                 Civic Intelligence Platform
               </p>
             </div>
-          </div>
 
-          <div className="w-1/3">
+            {/* Tooltip */}
+            <div className="absolute -bottom-12 left-0 bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg border border-slate-700">
+              Switch to {getNextRouteName()}
+              <div className="absolute -top-1 left-4 w-2 h-2 bg-slate-800 border-l border-t border-slate-700 transform rotate-45"></div>
+            </div>
+          </button>
+
+          {/* Search Section - Enhanced */}
+          <div className="w-2/5 max-w-2xl">
             <SearchBar onLocationSelect={handleLocationSelect} />
             {selectedCity && selectedCity.name !== mockCities[0].name && (
-              <div className="mt-2 text-xs text-blue-400 flex items-center gap-1">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <div className="mt-2 text-xs text-blue-400 flex items-center gap-1.5 font-medium animate-in fade-in duration-300">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
-                Selected: {selectedCity.name}
+                <span className="truncate">Selected: {selectedCity.name}</span>
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className="text-xs text-gray-400">
-                Items in Report
+          {/* Action Section - Enhanced */}
+          <div className="flex items-center gap-6">
+            <div className="text-right bg-slate-800/50 rounded-lg px-4 py-2 border border-slate-700/50">
+              <div className="text-xs text-slate-400 font-medium">
+                Report Items
               </div>
-              <div className="font-bold text-lg text-white">
+              <div className="font-bold text-xl text-white">
                 {reportItems.length}
               </div>
             </div>
-            <button 
+            <button
               onClick={handleGenerateReport}
               disabled={generatedReport.loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded transition-colors"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-blue-500/30 disabled:shadow-none flex items-center gap-2"
             >
-              {generatedReport.loading ? 'Generating...' : 'Generate Report'}
+              {generatedReport.loading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Generate Report
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -249,23 +322,13 @@ const WestgateDemo: React.FC = () => {
       {/* Map */}
       <div className="absolute inset-0 z-0">
         <SimpleMap
-          data={[
-            ...mockCities.map(city => ({
-              topic: city.name,
-              lon: city.longitude,
-              lat: city.latitude,
-              text: `${city.problems.length} issues detected`,
-              author: city.county,
-            })),
-            // Add searched city if it's different from mock cities
-            ...(selectedCity && !mockCities.some(city => city.name === selectedCity.name) ? [{
-              topic: selectedCity.name,
-              lon: selectedCity.longitude,
-              lat: selectedCity.latitude,
-              text: 'Searched Location',
-              author: 'Search Result',
-            }] : [])
-          ]}
+          data={mockCities.map(city => ({
+            topic: city.name,
+            lon: city.longitude,
+            lat: city.latitude,
+            text: `${city.problems.length} issues detected`,
+            author: city.county,
+          }))}
           opacity={0.8}
           cellSize={15}
           colorDomain={[0, 20]}
@@ -277,6 +340,7 @@ const WestgateDemo: React.FC = () => {
             // Hover functionality can be added here
           }}
           refreshKey={0}
+          searchMarker={searchMarker}
         />
       </div>
 
@@ -293,37 +357,40 @@ const WestgateDemo: React.FC = () => {
         </div>
       )}
 
-      {/* City Details Panel - Right Side with Scroll */}
+      {/* City Details Panel - Right Side - Enhanced */}
       {selectedCity && (
-        <div className="absolute right-4 top-24 bottom-24 z-10 w-96">
-          <div className="h-full backdrop-blur-md rounded-lg border overflow-hidden flex flex-col bg-black/50 border-gray-700">
-            {/* Navigation Header */}
-            <div className="p-4 border-b flex items-center justify-between border-gray-700">
+        <div className="absolute right-6 top-28 bottom-28 z-10 w-[420px]">
+          <div className="h-full backdrop-blur-xl rounded-2xl border overflow-hidden flex flex-col bg-gradient-to-br from-slate-900/95 to-slate-800/95 border-slate-700/50 shadow-2xl">
+            {/* Navigation Header - Enhanced */}
+            <div className="px-5 py-4 border-b flex items-center justify-between border-slate-700/50 bg-slate-800/30">
               <button
                 onClick={handlePrevCity}
-                className="p-2 rounded hover:bg-opacity-50 transition-colors hover:bg-gray-700"
+                className="p-2.5 rounded-lg hover:bg-slate-700/50 transition-all duration-200 group"
+                title="Previous city"
               >
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <div className="text-center">
-                <div className="text-sm text-gray-400">
-                  City {currentCityIndex + 1} of {mockCities.length}
+                <div className="text-sm font-semibold text-slate-300">
+                  {currentCityIndex + 1} <span className="text-slate-500">/</span> {mockCities.length}
                 </div>
+                <div className="text-xs text-slate-500 mt-0.5">Cities</div>
               </div>
               <button
                 onClick={handleNextCity}
-                className="p-2 rounded hover:bg-opacity-50 transition-colors hover:bg-gray-700"
+                className="p-2.5 rounded-lg hover:bg-slate-700/50 transition-all duration-200 group"
+                title="Next city"
               >
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
 
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-4">
+            {/* Scrollable Content - Enhanced */}
+            <div className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
               <CityDetailsPanel
                 city={selectedCity}
                 onViewAllProblems={() => setShowPopup(true)}
@@ -499,41 +566,48 @@ const WestgateDemo: React.FC = () => {
         </div>
       )}
 
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 z-10 bg-black/70 backdrop-blur-md rounded-lg border border-gray-700 p-4">
-        <h4 className="text-white font-semibold text-sm mb-2">Risk Level</h4>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500 rounded"></div>
-            <span className="text-gray-300 text-xs">High Risk</span>
+      {/* Legend - Enhanced */}
+      <div className="absolute bottom-6 left-6 z-10 bg-slate-900/95 backdrop-blur-xl rounded-xl border border-slate-700/50 p-5 shadow-2xl">
+        <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+          <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Risk Level
+        </h4>
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/50"></div>
+            <span className="text-slate-300 text-sm font-medium">High Risk</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-            <span className="text-gray-300 text-xs">Medium Risk</span>
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 bg-yellow-500 rounded-full shadow-lg shadow-yellow-500/50"></div>
+            <span className="text-slate-300 text-sm font-medium">Medium Risk</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded"></div>
-            <span className="text-gray-300 text-xs">Low Risk</span>
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/50"></div>
+            <span className="text-slate-300 text-sm font-medium">Low Risk</span>
           </div>
         </div>
       </div>
 
-      {/* Stats Bar */}
-      <div className="absolute bottom-4 right-4 z-10 bg-black/70 backdrop-blur-md rounded-lg border border-gray-700 p-4">
-        <div className="flex gap-6">
-          <div>
-            <div className="text-gray-400 text-xs">Total Cities</div>
-            <div className="text-white font-bold text-xl">{mockCities.length}</div>
+      {/* Stats Bar - Enhanced */}
+      <div className="absolute bottom-6 right-6 z-10 bg-slate-900/95 backdrop-blur-xl rounded-xl border border-slate-700/50 p-5 shadow-2xl">
+        <div className="flex gap-8">
+          <div className="text-center">
+            <div className="text-slate-400 text-xs font-medium mb-1.5">Total Cities</div>
+            <div className="text-white font-bold text-2xl">{mockCities.length}</div>
           </div>
-          <div>
-            <div className="text-gray-400 text-xs">High Risk</div>
-            <div className="text-red-400 font-bold text-xl">
+          <div className="border-l border-slate-700"></div>
+          <div className="text-center">
+            <div className="text-slate-400 text-xs font-medium mb-1.5">High Risk</div>
+            <div className="text-red-400 font-bold text-2xl">
               {mockCities.filter(c => c.riskLevel === 'high').length}
             </div>
           </div>
-          <div>
-            <div className="text-gray-400 text-xs">Total Issues</div>
-            <div className="text-white font-bold text-xl">
+          <div className="border-l border-slate-700"></div>
+          <div className="text-center">
+            <div className="text-slate-400 text-xs font-medium mb-1.5">Total Issues</div>
+            <div className="text-blue-400 font-bold text-2xl">
               {mockCities.reduce((sum, city) => sum + city.problems.length, 0)}
             </div>
           </div>
