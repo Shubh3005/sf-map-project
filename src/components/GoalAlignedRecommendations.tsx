@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { cn } from '../lib/utils';
 
 interface GoalRecommendation {
   city_goal: {
@@ -199,7 +198,7 @@ const GoalAlignedRecommendations: React.FC<GoalAlignedRecommendationsProps> = ({
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h4 className="font-semibold text-white">
-                    {rec.city_goal.metadata.original_text.split(':')[0] || 'Goal-Aligned Solution'}
+                    {rec.city_goal.metadata.original_text?.split(' ').slice(0, 3).join(' ') || 'Goal-Aligned Solution'}
                   </h4>
                   <div className={`px-2 py-1 rounded text-xs font-semibold border ${getPriorityColor(rec.city_goal.metadata.priority_level)}`}>
                     {rec.city_goal.metadata.priority_level.toUpperCase()}
@@ -212,11 +211,11 @@ const GoalAlignedRecommendations: React.FC<GoalAlignedRecommendationsProps> = ({
               </div>
               
               <div className="text-right">
-                <div className={`text-sm font-semibold ${getScoreColor(rec.combined_score)}`}>
-                  {Math.round(rec.combined_score * 100)}% Match
+                <div className={`text-sm font-semibold ${getScoreColor(rec.combined_score || 0)}`}>
+                  {rec.combined_score ? Math.round(rec.combined_score * 100) : 0}% Match
                 </div>
                 <div className="text-xs text-gray-400">
-                  {getScoreLabel(rec.combined_score)}
+                  {getScoreLabel(rec.combined_score || 0)}
                 </div>
               </div>
             </div>
